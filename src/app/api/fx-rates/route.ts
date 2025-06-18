@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-interface CurrencyApiResponse {
+export interface CurrencyApiResponse {
   meta: {
     last_updated_at: string
   }
@@ -12,7 +12,7 @@ interface CurrencyApiResponse {
   }
 }
 
-interface ApiErrorResponse {
+export interface ApiErrorResponse {
   error: string
 }
 

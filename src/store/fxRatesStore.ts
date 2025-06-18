@@ -1,6 +1,6 @@
 import { SupportedCurrency } from '@/lib/swap'
 import { create } from 'zustand'
-import { CurrencyApiResponse } from '@/types/api'
+import { CurrencyApiResponse } from '@/app/api/fx-rates/route'
 
 export type FxRates = Record<SupportedCurrency, { code: string; value: number }>
 
