@@ -284,10 +284,15 @@ const getWrapHandlerClass = (tokenIn: Address, tokenOut: Address, chain: GqlChai
 
 export const useHandler = (tokenInAddress: Address, tokenOutAddress: Address, chain: GqlChain) => {
   if (isNativeWrap(tokenInAddress, tokenOutAddress, chain)) {
-    return { simulate: nativeWrapHandlerSimulate, build: nativeWrapHandlerBuild }
+    return { simulate: nativeWrapHandlerSimulate, build: nativeWrapHandlerBuild, handlerName: 'nativeWrapHandler' }
   } else if (isSupportedWrap(tokenInAddress, tokenOutAddress, chain)) {
     const { LidoWrapHandlerSimulate, LidoWrapHandlerBuild } = getWrapHandlerClass(tokenInAddress, tokenOutAddress, chain)
-    return { simulate: LidoWrapHandlerSimulate, build: LidoWrapHandlerBuild }
+    return { simulate: LidoWrapHandlerSimulate, build: LidoWrapHandlerBuild, handlerName: 'lidoWrapHandler' }
   }
-  return { simulate: defaultSwapHandlerSimulate, build: defaultSwapHandlerBuild }
+  return { simulate: defaultSwapHandlerSimulate, build: defaultSwapHandlerBuild, handlerName: 'defaultSwapHandler' }
+}
+
+export const useHandlerName = (tokenInAddress: Address, tokenOutAddress: Address, chain: GqlChain) => {
+  const { handlerName } = useHandler(tokenInAddress, tokenOutAddress, chain)
+  return handlerName
 }

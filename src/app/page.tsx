@@ -43,6 +43,7 @@ import { useManagedApproveToken } from '@/hooks/useManagedApproveToken'
 import { useSpenderAddress, VaultVersion } from '@/hooks/useSpenderAddress'
 import { MAX_UINT256 } from '@balancer/sdk'
 import { useManagedSendTransaction } from '@/hooks/useManagedSendTransaction'
+import { useHandlerName } from '@/hooks/useHandler'
 
 const Swap = () => {
   const [swapStateVar, setSwapStateVar] = useState<SwapState>({
@@ -99,8 +100,8 @@ const Swap = () => {
     tokenOut: swapStateVar.tokenOut,
     swapType: swapStateVar.swapType,
   })
-  console.log(simulateSwapResult, 'simulateSwapResult')
-  console.log(buildSwapResult, 'buildSwapResult')
+
+  const handlerName = useHandlerName(swapStateVar.tokenIn.address, swapStateVar.tokenOut.address, swapStateVar.selectedChain)
 
   const { priceImpactLevel, calcPriceImpact, priceImpactColor, priceImpact } = usePriceImpact()
 
@@ -485,6 +486,7 @@ const Swap = () => {
             usdValueForTokenOut={usdValueForTokenOut}
             slippage={slippage}
             tokenOutAmount={swapStateVar.tokenOut.amount}
+            handlerName={handlerName}
           />
         )}
         {simulateSwapIsError ? <SwapSimulationError errorMessage={simulateSwapError.message} /> : null}

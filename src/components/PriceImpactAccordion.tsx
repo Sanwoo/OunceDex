@@ -5,11 +5,40 @@ import { InfoIcon, OctagonX, TriangleAlert } from 'lucide-react'
 import { ApiToken } from '@/lib/details/types'
 import { bn, fNum, Numberish } from '@/lib/numbers'
 import { GqlTokenPrice } from '@/lib/generated/graphql'
-import { getFullPriceImpactLabel, getMaxSlippageLabel, getPriceImpactExceedsLabel, usdValueForToken } from '@/lib/swap'
+import { getFullPriceImpactLabel, getMaxSlippageLabel, getPriceImpactExceedsLabel, SdkSimulateSwapResponse, SdkSimulationResponseWithRouter, SimulateSwapResponse, usdValueForToken } from '@/lib/swap'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { motion } from 'framer-motion'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { SimulateSwapResult } from '@/hooks/useHandler'
+
+const OrderRoute = ({ simulateSwapResult }: { simulateSwapResult: SdkSimulationResponseWithRouter }) => {
+  const orderRouteVersion = useMemo(() => {
+    return simulateSwapResult ? ('protocolVersion' in simulateSwapResult ? simulateSwapResult.protocolVersion : 2) : 2
+  }, [simulateSwapResult])
+
+  const getRouteHopsLabel = useMemo(() => {
+    if (simulateSwapResult.hopCount === 0) return 'Unknown'
+    return `Bv${orderRouteVersion}: ${simulateSwapResult.hopCount} ${simulateSwapResult.hopCount > 1 ? 'hops' : 'hop'}`
+  }, [simulateSwapResult, orderRouteVersion])
+
+  return (
+    <div className="flex flex-row items-center justify-between">
+      <span className="pl-2">Order route</span>
+      <div className="flex flex-row gap-2 items-center">
+        <span>{getRouteHopsLabel}</span>
+        <HoverCard>
+          <HoverCardTrigger>
+            <div className="cursor-pointer">
+              <InfoIcon size={16} />
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent className="backdrop-blur-md bg-white/5 text-purple-100/85 text-sm border-purple-300/50">
+            <span> Balancer Vault version and number of swap hops</span>
+          </HoverCardContent>
+        </HoverCard>
+      </div>
+    </div>
+  )
+}
 
 interface PriceImpactIconProps {
   priceImpactLevel: PriceImpactLevel
@@ -35,7 +64,7 @@ interface PriceImpactAccordionProps {
   priceImpactColor: string
   tokenInInfo: ApiToken | undefined
   tokenOutInfo: ApiToken | undefined
-  simulateSwapResult: SimulateSwapResult
+  simulateSwapResult: SimulateSwapResponse | SdkSimulateSwapResponse | SdkSimulationResponseWithRouter
   tokenPrices: GqlTokenPrice[]
   toCurrency: (
     usdVal: Numberish,
@@ -50,6 +79,7 @@ interface PriceImpactAccordionProps {
   usdValueForTokenOut: string
   slippage: number
   tokenOutAmount: string
+  handlerName: string
 }
 
 export const PriceImpactAccordion = ({
@@ -64,7 +94,10 @@ export const PriceImpactAccordion = ({
   usdValueForTokenOut,
   slippage,
   tokenOutAmount,
+  handlerName,
 }: PriceImpactAccordionProps) => {
+  const isDefaultSwapHandler = handlerName === 'defaultSwapHandler'
+
   const tokenInUsdValue = useMemo(() => usdValueForToken(tokenInInfo, '1', tokenPrices), [tokenInInfo, tokenPrices])
 
   const effectivePriceReversed = useMemo(() => fNum('token', simulateSwapResult?.effectivePriceReversed || '0', { abbreviated: false }), [simulateSwapResult?.effectivePriceReversed])
@@ -86,18 +119,6 @@ export const PriceImpactAccordion = ({
         .toString(),
     [tokenOutAmount, slippage],
   )
-
-  const { orderRouteVersion } = useMemo(
-    () => ({
-      orderRouteVersion: simulateSwapResult ? simulateSwapResult.protocolVersion : 2,
-    }),
-    [simulateSwapResult],
-  )
-
-  const getRouteHopsLabel = useMemo(() => {
-    if (simulateSwapResult.hopCount === 0) return 'Unknown'
-    return `Bv${orderRouteVersion}: ${simulateSwapResult.hopCount} ${simulateSwapResult.hopCount > 1 ? 'hops' : 'hop'}`
-  }, [simulateSwapResult.hopCount, orderRouteVersion])
 
   const atLeastTooltip = useMemo(
     () => 'You will get at least this amount, even if you suffer maximum slippage ' + 'from unfavorable market price movements before your transaction executes on-chain.',
@@ -185,23 +206,7 @@ export const PriceImpactAccordion = ({
                     </HoverCard>
                   </div>
                 </div>
-                {/* isdefaulthandler？ */}
-                <div className="flex flex-row items-center justify-between">
-                  <span className="pl-2">Order route</span>
-                  <div className="flex flex-row gap-2 items-center">
-                    <span>{getRouteHopsLabel}</span>
-                    <HoverCard>
-                      <HoverCardTrigger>
-                        <div className="cursor-pointer">
-                          <InfoIcon size={16} />
-                        </div>
-                      </HoverCardTrigger>
-                      <HoverCardContent className="backdrop-blur-md bg-white/5 text-purple-100/85 text-sm border-purple-300/50">
-                        <span> Balancer Vault version and number of swap hops</span>
-                      </HoverCardContent>
-                    </HoverCard>
-                  </div>
-                </div>
+                {isDefaultSwapHandler ? <OrderRoute simulateSwapResult={simulateSwapResult as SdkSimulationResponseWithRouter} /> : null}
               </div>
             </AccordionContent>
           </AccordionItem>
