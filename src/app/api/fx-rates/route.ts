@@ -1,5 +1,20 @@
 import { NextResponse } from 'next/server'
-import { ApiErrorResponse, CurrencyApiResponse } from '@/types/api'
+
+interface CurrencyApiResponse {
+  meta: {
+    last_updated_at: string
+  }
+  data: {
+    [key: string]: {
+      code: string
+      value: number
+    }
+  }
+}
+
+interface ApiErrorResponse {
+  error: string
+}
 
 const API_KEY = process.env.CURRENCY_API_KEY
 
